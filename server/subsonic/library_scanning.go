@@ -14,19 +14,29 @@ import (
 func (api *Router) GetScanStatus(r *http.Request) (*responses.Subsonic, error) {
 	// TODO handle multiple mediafolders
 	ctx := r.Context()
-	mediaFolder := conf.Server.MusicFolder
-	status, err := api.scanner.Status(mediaFolder)
-	if err != nil {
-		log.Error(ctx, "Error retrieving Scanner status", err)
-		return nil, newError(responses.ErrorGeneric, "Internal Error")
+	scanStatus := &responses.ScanStatus{
+		Scanning:    false,
+		Count:       0,
+		FolderCount: 0,
+		LastScan:    nil,
+	}
+	for _, mediaFolder := range conf.Server.MusicFolder {
+		status, err := api.scanner.Status(mediaFolder)
+		if err != nil {
+			log.Error(ctx, "Error retrieving Scanner status", err)
+			return nil, newError(responses.ErrorGeneric, "Internal Error")
+		}
+		if status.Scanning {
+			scanStatus.Scanning = status.Scanning
+		}
+		scanStatus.Count += int64(status.Count)
+		scanStatus.FolderCount += int64(status.FolderCount)
+		if scanStatus.LastScan == nil || scanStatus.LastScan.Before(status.LastScan) {
+			scanStatus.LastScan = &status.LastScan
+		}
 	}
 	response := newResponse()
-	response.ScanStatus = &responses.ScanStatus{
-		Scanning:    status.Scanning,
-		Count:       int64(status.Count),
-		FolderCount: int64(status.FolderCount),
-		LastScan:    &status.LastScan,
-	}
+	response.ScanStatus = scanStatus
 	return response, nil
 }
 

@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/beego/beego/v2/client/orm"
 	"github.com/navidrome/navidrome/conf"
@@ -17,21 +18,31 @@ func NewMediaFolderRepository(ctx context.Context, o orm.QueryExecutor) model.Me
 }
 
 func (r *mediaFolderRepository) Get(id int32) (*model.MediaFolder, error) {
-	mediaFolder := hardCoded()
-	return &mediaFolder, nil
+	mediaFolders := hardCoded()
+	if mediaFolder, ok := mediaFolders[id]; ok {
+		return &mediaFolder, nil
+	}
+	return nil, fmt.Errorf("media folder with id '%d' not found", id)
 }
 
 func (*mediaFolderRepository) GetAll() (model.MediaFolders, error) {
-	mediaFolder := hardCoded()
-	result := make(model.MediaFolders, 1)
-	result[0] = mediaFolder
+	mediaFolders := hardCoded()
+	result := make(model.MediaFolders, len(mediaFolders))
+	for i, mediaFolder := range mediaFolders {
+		result[i] = mediaFolder
+	}
 	return result, nil
 }
 
-func hardCoded() model.MediaFolder {
-	mediaFolder := model.MediaFolder{ID: 0, Path: conf.Server.MusicFolder}
-	mediaFolder.Name = "Music Library"
-	return mediaFolder
+func hardCoded() map[int32]model.MediaFolder {
+	mediaFolders := make(map[int32]model.MediaFolder, len(conf.Server.MusicFolder))
+	for index, musicFolder := range conf.Server.MusicFolder {
+		// unlikely that the number of music folders with be greater than max of int32
+		mediaFolder := model.MediaFolder{ID: int32(index), Path: musicFolder}
+		mediaFolder.Name = "Music Library"
+		mediaFolders[mediaFolder.ID] = mediaFolder
+	}
+	return mediaFolders
 }
 
 var _ model.MediaFolderRepository = (*mediaFolderRepository)(nil)

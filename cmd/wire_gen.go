@@ -28,7 +28,7 @@ import (
 
 // Injectors from wire_injectors.go:
 
-func CreateServer(musicFolder string) *server.Server {
+func CreateServer(musicFolders []string) *server.Server {
 	sqlDB := db.Db()
 	dataStore := persistence.New(sqlDB)
 	broker := events.GetBroker()

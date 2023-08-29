@@ -21,7 +21,7 @@ type configOptions struct {
 	ConfigFile                   string
 	Address                      string
 	Port                         int
-	MusicFolder                  string
+	MusicFolder                  []string
 	DataFolder                   string
 	CacheFolder                  string
 	DbPath                       string
@@ -257,7 +257,7 @@ func AddHook(hook func()) {
 }
 
 func init() {
-	viper.SetDefault("musicfolder", filepath.Join(".", "music"))
+	viper.SetDefault("musicfolder", []string{filepath.Join(".", "music")})
 	viper.SetDefault("cachefolder", "")
 	viper.SetDefault("datafolder", ".")
 	viper.SetDefault("loglevel", "info")
